@@ -1,0 +1,4 @@
+gan_type: PretrainedBigGAN
+image_size: 256
+kwargs: 
+  model_name: biggan-deep-256

@@ -1,0 +1,4 @@
+gan_type: StyleGAN2
+image_size: 512
+kwargs: 
+  model_name: afhqwild

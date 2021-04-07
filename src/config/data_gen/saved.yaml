@@ -1,0 +1,20 @@
+# Load GAN-generated images from disk
+load_from_disk: True 
+
+# Loading from raw images
+data:
+  dataset_type: 'raw'
+  root: null
+
+# # Loading from an tar file with WebDataset
+# # See https://github.com/tmbdev/webdataset
+# data:
+#   dataset_type: 'webdataset'
+#   train_tar_file: null
+#   val_tar_file: null
+#   length: null
+
+# Use augmentations
+image_size: 128
+crop_size: ${data_gen.image_size}
+augmentations: 0

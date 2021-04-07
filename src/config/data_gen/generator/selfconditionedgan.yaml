@@ -1,0 +1,4 @@
+gan_type: SelfConditionedGAN
+image_size: 128
+kwargs: 
+  model_name: self_conditioned  # self_conditioned or unconditional
