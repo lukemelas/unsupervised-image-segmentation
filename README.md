@@ -16,18 +16,24 @@ Recent research has shown that numerous human-interpretable directions exist in 
 
 #### Dependencies
 
-This code depends on [pytorch-pretrained-gans](), a repository I developed that exposes a standard interface for a variety of pretrained GANs. With this dependency, we can use: 
- - [BigGAN](https://github.com/ajbrock/BigGAN-PyTorch)
- - [BigBiGAN](https://arxiv.org/abs/1907.02544)
- - [Many GANs from StudioGAN](https://github.com/POSTECH-CVLab/PyTorch-StudioGAN)
- - [Self-Conditioned GANs](https://arxiv.org/abs/2006.10728)
- - [StyleGAN-2-ADA](https://arxiv.org/abs/1912.04958)
+This code depends on [pytorch-pretrained-gans](https://github.com/lukemelas/pytorch-pretrained-gans), a repository I developed that exposes a standard interface for a variety of pretrained GANs. Install it with:
+```bash
+pip install git+https://github.com/lukemelas/pytorch-pretrained-gans
+```
+The pretrained weights for most GANs are downloaded automatically. For those that are not, I have provided scripts in that repository. 
 
 There are also some standard dependencies:
  - PyTorch (tested on version 1.7.1, but should work on any version)
- - Hydra 1.1: `pip install hydra-core --pre`
- - Other: `pip install albumentations tqdm retry tensorboard`
- - [Optional] Weights and Biases: `pip install wandb`
+ - Hydra 1.1
+ - Albumentations, Retry
+ - [Optional] Weights and Biases 
+ 
+ Install them with:
+ ```bash
+pip install hydra-core --pre
+pip install albumentations tqdm retry tensorboard
+ ```
+ 
 
 #### General Approach
 
@@ -85,8 +91,31 @@ src
 ```
 
 #### Datasets
-The datasets should be placed in a directory we will refer to as `$DATASETS_DIR`. You should then update this 
+
+The datasets should have the following structure. You can easily add you own datasets or use only a subset of these datasets by modifying `config/segment.yaml`. You should specify your directory by modifying `root` in that file on line 19, or by passing `data_seg.root=MY_DIR` using the command line whenever you call `python segmentation/main.py`. 
+
 ```bash
+├── DUT_OMRON
+│   ├── DUT-OMRON-image
+│   │   └── ...
+│   └── pixelwiseGT-new-PNG
+│       └── ...
+├── DUTS
+│   ├── DUTS-TE
+│   │   ├── DUTS-TE-Image
+│   │   │   └── ...
+│   │   └── DUTS-TE-Mask
+│   │       └── ...
+│   └── DUTS-TR
+│       ├── DUTS-TR-Image
+│       │   └── ...
+│       └── DUTS-TR-Mask
+│           └── ...
+├── ECSSD
+│   ├── ground_truth_mask
+│   │   └── ...
+│   └── images
+│       └── ...
 ├── CUB_200_2011
 │   ├── train_images
 │   │   └── ...
@@ -94,28 +123,7 @@ The datasets should be placed in a directory we will refer to as `$DATASETS_DIR`
 │   │   └── ...
 │   ├── test_images
 │   │   └── ...
-│   ├── test_segmentations
-│   │   └── ...
-├── DUT_OMRON
-│   ├── DUT-OMRON-image
-│   │   └── ...
-│   └── pixelwiseGT-new-PNG
-│   │   └── ...
-├── DUTS
-│   ├── DUTS-TE
-│   │   ├── DUTS-TE-Image
-│   │   │   └── ...
-│   │   └── DUTS-TE-Mask
-│   │       └── ...
-│   ├── DUTS-TR
-│   │   ├── DUTS-TR-Image
-│   │   │   └── ...
-│   │   └── DUTS-TR-Mask
-│           └── ...
-├── ECSSD
-│   ├── ground_truth_mask
-│   │   └── ...
-│   └── images
+│   └── test_segmentations
 │       └── ...
 └── Flowers
     ├── train_images
@@ -127,6 +135,13 @@ The datasets should be placed in a directory we will refer to as `$DATASETS_DIR`
     └── test_segmentations
         └── ...
 ```
+
+The datasets can be downloaded from:
+* [DUT_OMRON](http://saliencydetection.net)
+* [DUTS](http://saliencydetection.net/duts/)
+* [ECSSD](https://www.cse.cuhk.edu.hk/leojia/projects/hsaliency/dataset.html)
+* [CUB](http://www.vision.caltech.edu/visipedia/CUB-200-2011.html)
+* [Flowers](https://www.robots.ox.ac.uk/~vgg/data/flowers/102/index.html)
 
 #### Training
 
@@ -190,8 +205,19 @@ eval_checkpoint=${checkpoint} \
 data_seg.root=${DATASETS_DIR} 
 ```
 
+
 #### Pretrained models
  * Name: [Download](url)
+
+
+#### Available GANs
+
+It should be possible to use any GAN from [pytorch-pretrained-gans](https://github.com/lukemelas/pytorch-pretrained-gans), including:
+ - [BigGAN](https://github.com/ajbrock/BigGAN-PyTorch)
+ - [BigBiGAN](https://arxiv.org/abs/1907.02544)
+ - [Many GANs from StudioGAN](https://github.com/POSTECH-CVLab/PyTorch-StudioGAN)
+ - [Self-Conditioned GANs](https://arxiv.org/abs/2006.10728)
+ - [StyleGAN-2-ADA](https://arxiv.org/abs/1912.04958)
 
 
 #### Citation   

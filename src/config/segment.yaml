@@ -16,7 +16,7 @@ eval_checkpoint: null
 data_seg:
   binary_threshold: 0.5
   image_size: 128
-  root: ${env:GANSEG_DATA_SEG_ROOT}
+  root: ${env:GANSEG_DATA_SEG_ROOT}  # <- REPLACE THIS WITH YOUR DIRECTORY
   data:
     - name: 'CUB'
       images_dir: "${data_seg.root}/CUB_200_2011/test_images"

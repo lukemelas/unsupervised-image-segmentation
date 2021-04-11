@@ -3,7 +3,6 @@ from pathlib import Path
 from PIL import Image
 import numpy as np
 import torch
-from torch.utils.tensorboard import SummaryWriter
 import kornia as K
 from tqdm import trange, tqdm
 import hydra
@@ -90,9 +89,6 @@ def run(cfg: DictConfig):
     criterion = UnsupervisedSegmentationLoss(cfg.losses, image_size=cfg.generator.image_size)
     criterion.to(device)
 
-    # Logging, checkpointing, tensorboard
-    writer = SummaryWriter(log_dir='tensorboard')
-
     # Fixed vectors for visualization
     z_vis_fixed = G.sample_latent(batch_size=8, device=device).unsqueeze(1).requires_grad_(False)  # 8 vis images
     y_vis_fixed = G.sample_class(batch_size=8, device=device).unsqueeze(1).requires_grad_(
@@ -135,7 +131,6 @@ def run(cfg: DictConfig):
         # Log
         log_message = f"Iteration {i:5d} | Time {time.time() - start_time:.1f}"
         for k, v in sorted(losses.items()):
-            writer.add_scalar(f'train/{k}', v.item(), global_step=i)
             log_message += f' | {k}: {v.item():.3f}'
         if i % cfg.log_every == 0:
             progress_bar.write(log_message)
@@ -143,8 +138,7 @@ def run(cfg: DictConfig):
         # Visualize with Tensorboard and save to file
         if i % cfg.vis_every == 0:
             img_grid = utils.create_grid(G=G, model=model, zs=z_vis_fixed, ys=y_vis_fixed, n_imgs=8)
-            writer.add_image(f'vis', img_grid, global_step=i, dataformats='HWC')
-            img_file = log_dir / "imgs" / f"{i}.png"
+            img_file = "images" / f"{i}.png"
             img_file.parent.mkdir(parents=True, exist_ok=True)
             img_grid = (img_grid * 255).astype(np.uint8)
             Image.fromarray(img_grid).save(str(img_file))
