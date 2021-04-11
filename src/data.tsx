@@ -2,10 +2,10 @@
 export const title = "Finding an Unsupervised Image Segmenter in each of your Deep Generative Models"
 
 // Short version of the abstract
-export const description = "Abstract"
+export const description = "We propose a method to automatically find a universal latent direction in a GAN that can separate the foreground from the background. We can then generate an unlimited supply of samples with masks to train a segmentation network. The whole process is automatic and unsupervised and achieves state-of-the-art unsupervised segmentation performance."
 
 // Abstract
-export const abstract = "Abstract"
+export const abstract = "Recent research has shown that numerous human-interpretable directions exist in the latent space of GANs. In this paper, we develop an automatic procedure for finding directions that lead to foreground-background image separation, and we use these directions to train an image segmentation model without human supervision. Our method is generator-agnostic, producing strong segmentation results with a wide range of different GAN architectures. Furthermore, by leveraging GANs pretrained on large datasets such as ImageNet, we are able to segment images from a range of domains without further training or finetuning. Evaluating our method on image segmentation benchmarks, we compare favorably to prior work while using neither human supervision nor access to the training data. Broadly, our results demonstrate that automatically extracting foreground-background structure from pretrained deep generative models can serve as a remarkably effective substitute for human supervision."
 
 // Institutions
 export const institutions = {

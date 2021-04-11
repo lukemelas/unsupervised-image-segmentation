@@ -1,4 +1,4 @@
-import { Link as ChakraLink, Text, Code, ListItem, Heading, UnorderedList } from '@chakra-ui/react'
+import { Link as ChakraLink, Text, Code, ListItem, Heading, UnorderedList, Stack, Box } from '@chakra-ui/react'
 import { Title, Authors } from 'components/Header'
 import { Container } from 'components/Container'
 import NextLink from 'next/link'
@@ -37,15 +37,31 @@ const Index = () => (
       <Text pb="2rem">{abstract}</Text>
 
       {/* Example */}
-      <Heading fontSize="2xl" pb="1rem">Examples</Heading>
+      <Heading fontSize="2xl" pb="1rem" mb="1rem">Examples</Heading>
+      <Stack direction="row" justifyContent="center">
+        <video loop autoPlay muted>
+          <source src={`${process.env.BASE_PATH || ""}/images/54.mp4`} type="video/mp4" />
+        </video>
+        <video loop autoPlay muted>
+          <source src={`${process.env.BASE_PATH || ""}/images/63.mp4`} type="video/mp4" />
+        </video>
+        <video loop autoPlay muted>
+          <source src={`${process.env.BASE_PATH || ""}/images/78.mp4`} type="video/mp4" />
+        </video>
+        <video loop autoPlay muted>
+          <source src={`${process.env.BASE_PATH || ""}/images/83.mp4`} type="video/mp4" />
+        </video>
+      </Stack>
+      <Text align="center" pt="0.5rem" pb="0.5rem" mb="1rem" fontSize="small">Examples of interpolations in GAN latent space</Text>
+
       <img src={`${process.env.BASE_PATH || ""}/images/example.png`} />
-      <Text align="center" pt="0.5rem" pb="0.5rem" fontSize="small">This is a caption</Text>
+      <Text align="center" pt="0.5rem" pb="0.5rem" fontSize="small">Examples of segmentations produced by the final segmentation model, which was trained entirely on GAN-generated images</Text>
 
       {/* Another Section */}
-      <Heading fontSize="2xl" pt="2rem" pb="1rem" id="dataset">Another Section</Heading>
+      {/* <Heading fontSize="2xl" pt="2rem" pb="2rem" id="dataset">Another Section</Heading>
       <Text >
         Here we have...
-      </Text>
+      </Text> */}
 
       {/* Citation */}
       <Heading fontSize="2xl" pt="2rem" pb="1rem">Citation</Heading>
