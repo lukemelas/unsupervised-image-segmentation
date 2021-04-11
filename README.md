@@ -157,9 +157,9 @@ PYTHONPATH=. python optimization/main.py data_gen/generator=bigbigan name=NAME
 ```
 The output will be saved in `outputs/optimization/fixed-BigBiGAN-NAME/DATE/`, with the final checkpoint in `latest.pth`.
 
-**Generation**
+**Segmentation with precomputed generations**
 
-The recommended way of training is to generate the data first and train afterward. To generate, run:
+The recommended way of training is to generate the data first and train afterward. An example generation script would be: 
 ```bash
 PYTHONPATH=. python segmentation/generate_and_save.py \
 name=NAME \
@@ -167,12 +167,11 @@ data_gen=generated \
 data_gen/generator=bigbigan \
 data_gen.checkpoint="YOUR_OPTIMIZATION_DIR_FROM_ABOVE/latest.pth" \
 data_gen.save_dir="YOUR_OUTPUT_DIR" \
+data_gen.save_size=1000000 \
 data_gen.kwargs.batch_size=1 \
 data_gen.kwargs.generation_batch_size=128
 ```
 This will generate 1 million image-label pairs and save them to `YOUR_OUTPUT_DIR/images`. Note that `YOUR_OUTPUT_DIR` should be an _absolute path_, not a relative one, because Hydra changes the working directory. You may also want to tune the `generation_batch_size` to maximize GPU utilization on your machine.
-
-**Segmentation** 
 
 Once you have generated data, you can train a segmentation model:
 ```bash
@@ -182,9 +181,9 @@ data_gen=saved \
 data_gen.data.root="YOUR_OUTPUT_DIR_FROM_ABOVE"
 ```
 
-**Segmentation with on-the-fly generation** 
+**Segmentation with on-the-fly generations** 
 
-To generate data while training the segmentation model, you can run: 
+Alternatively, you can generate data while training the segmentation model. An example script would be: 
 ```bash
 PYTHONPATH=. python segmentation/main.py \
 name=NAME \
