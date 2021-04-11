@@ -1,15 +1,17 @@
+# @package _global_
+defaults:
+  - data_gen/generator: ???
+
+hydra:
+  run:
+    dir: ./outputs/optimization/${model_type}-${data_gen.generator.gan_type}-${name}/${now:%Y-%m-%d_%H-%M-%S}
+
 # Basic config
 name: default
 seed: 42
 
 # Data
 batch_size: 32
-
-# Generator
-generator:
-  gan_type: BigBiGAN
-  image_size: null
-  kwargs: {}
 
 # Model that transforms the latent variable z
 model_type: fixed
@@ -41,8 +43,5 @@ r:
 
 # Losses
 losses:
-  lightness_loss: 0.0
-  outside_square_loss: 0.0
-  outside_circle_loss: 0.0
-  sobel_shift_loss: 0.0
-  sobel_difference_loss: 0.0
+  outside_circle_loss: 2.0
+  sobel_shift_loss: 10.0

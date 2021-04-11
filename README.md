@@ -1,5 +1,3 @@
-- [ ] Update optimize to 
-
 <div align="center">    
  
 ## Finding an Unsupervised Image Segmenter in each of your Deep Generative Models
@@ -16,7 +14,7 @@ Recent research has shown that numerous human-interpretable directions exist in 
 
 ### How to run   
 
-#### GAN Dependencies
+#### Dependencies
 
 This code depends on [pytorch-pretrained-gans](), a repository I developed that exposes a standard interface for a variety of pretrained GANs. With this dependency, we can use: 
  - [BigGAN](https://github.com/ajbrock/BigGAN-PyTorch)
@@ -25,60 +23,65 @@ This code depends on [pytorch-pretrained-gans](), a repository I developed that 
  - [Self-Conditioned GANs](https://arxiv.org/abs/2006.10728)
  - [StyleGAN-2-ADA](https://arxiv.org/abs/1912.04958)
 
-#### Standard Dependencies
-
+There are also some standard dependencies:
  - PyTorch (tested on version 1.7.1, but should work on any version)
  - Hydra 1.1: `pip install hydra-core --pre`
- - Other: `pip install albumentations tqdm tensorboard`
- - WandB (optional): `pip install wandb`
+ - Other: `pip install albumentations tqdm retry tensorboard`
+ - [Optional] Weights and Biases: `pip install wandb`
 
-#### Code Structure
-The code is split into two parts: `optimization` and `segmetnation`. 
+#### General Approach
 
-The optimization portion of the code finds a salient direction (or two salient directions) in the latent space of a given pretrained GAN that leads to foreground-background image separation. 
+Our unsupervised segmentation approach has two steps: (1) finding a good direction in latent space, and (2) training a segmentation model from data and masks that are generated using this direction. 
 
-The segmentation portion of the code uses the latent direction found in the first stage to generate a synthetic dataset for training a standard segmentation network (a UNet). This can be done in one of two ways: (1) you can generate the images on-the-fly during training, or (2) you can generate the images, save them to disk, and then train the segmentation network separately. 
+In detail, this means:
+ 1. We use `optimization/main.py` finds a salient direction (or two salient directions) in the latent space of a given pretrained GAN that leads to foreground-background image separation. 
+ 2. We use `segmentation/main.py` to train a standard segmentation network (a UNet) on generated data. The data can be generated in two ways: (1) you can generate the images on-the-fly during training, or (2) you can generate the images before training the segmentation model using `segmentation/generate_and_save.py` and then train the segmentation network afterward. The second approach is faster, but requires more disk space (~10GB for 1 million images). We will also provide a pre-generated dataset (coming soon). 
 
 #### Configuration and Logging
-We use Hydra for configuration and Weights and Biases for logging. With Hydra, you can specify a config file (found in `configs/`) with `--config-name=myconfig.yaml`. You can also override the config from the command line by specifying the overriding arguments (without `--`). For example, you can disable Weights and Biases with `wandb=False` and you can name the run with `name=myname`. 
+We use Hydra for configuration and Weights and Biases for logging. With Hydra, you can specify a config file (found in `configs/`) with `--config-name=myconfig.yaml`. You can also override the config from the command line by specifying the overriding arguments (without `--`). For example, you can enable Weights and Biases with `wandb=True` and you can name the run with `name=myname`. 
 
-Configs live in `optimization/config` and `segmentation/config`.
+The structure of the configs is as follows: 
+```bash
+config
+├── data_gen
+│   ├── generated.yaml  # <- for generating data with 1 latent direction
+│   ├── generated-dual.yaml   # <- for generating data with 2 latent directions
+│   ├── generator  # <- different types of GANs for generating data
+│   │   ├── bigbigan.yaml
+│   │   ├── pretrainedbiggan.yaml
+│   │   ├── selfconditionedgan.yaml
+│   │   ├── studiogan.yaml
+│   │   └── stylegan2.yaml 
+│   └── saved.yaml  # <- for using pre-generated data
+├── optimize.yaml  # <- for optimization
+└── segment.yaml   # <- for segmentation
+```
 
 #### Code Structure
 
+The code is structured as follows:
 ```bash
-├── UNet
+src
+├── models  # <- segmentation model
 │   ├── __init__.py
-│   ├── ensemble.py
-│   ├── unet_model.py
+│   ├── latent_shift_model.py  # <- shifts direction in latent space
+│   ├── unet_model.py  # <- segmentation model
 │   └── unet_parts.py
-├── config
-│   ├── base.yaml
-│   ├── data_gen
-│   │   ├── generated-dual.yaml
-│   │   ├── generated.yaml
-│   │   ├── generator
-│   │   │   ├── bigbigan.yaml
-│   │   │   ├── pretrainedbiggan.yaml
-│   │   │   ├── selfconditionedgan.yaml
-│   │   │   ├── studiogan.yaml
-│   │   │   └── stylegan2.yaml
-│   │   └── saved.yaml
-│   ├── default.yaml
-├── datasets
+├── config  # <- configuration, explained above
+│   ├── ... 
+├── datasets  # <- classes for loading datasets during segmentation/generation
 │   ├── __init__.py
-│   ├── biggan_dataset.py
-│   ├── saved_dataset.py
-│   └── seg_dataset.py
-├── helpers
-│   └── generate-dataset.py
-├── metrics.py
-├── models.py
-├── optimization_utils.py
-├── optimize.py
-├── sweep.py
-├── train.py
-└── utils.py
+│   ├── gan_dataset.py  # <- for generating dataset
+│   ├── saved_gan_dataset.py  # <- for pre-generated dataset
+│   └── real_dataset.py  # <- for evaluation datasets (i.e. real images)
+├── optimization
+│   ├── main.py  # <- main script
+│   └── utils.py  # <- helper functions
+└── segmentation
+    ├── generate_and_save.py  # <- for generating a dataset and saving it to disk
+    ├── main.py  # <- main script, uses PyTorch Lightning 
+    ├── metrics.py  # <- for mIoU/F-score calculations
+    └── utils.py  # <- helper functions
 ```
 
 #### Datasets
@@ -125,6 +128,57 @@ The datasets should be placed in a directory we will refer to as `$DATASETS_DIR`
         └── ...
 ```
 
+#### Training
+
+Before training, make sure you understand the general approach (explained above). 
+
+_Note:_ All commands are called from within the `src` directory. 
+
+In the example commands below, we use BigBiGAN. You can easily switch out BigBiGAN for another model if you would like to. 
+
+**Optimizaion**
+```bash
+PYTHONPATH=. python optimization/main.py data_gen/generator=bigbigan name=NAME
+```
+The output will be saved in `outputs/optimization/fixed-BigBiGAN-NAME/DATE/`, with the final checkpoint in `latest.pth`.
+
+**Generation**
+
+The recommended way of training is to generate the data first and train afterward. To generate, run:
+```bash
+PYTHONPATH=. python segmentation/generate_and_save.py \
+name=NAME \
+data_gen=generated \
+data_gen/generator=bigbigan \
+data_gen.checkpoint="YOUR_OPTIMIZATION_DIR_FROM_ABOVE/latest.pth" \
+data_gen.save_dir="YOUR_OUTPUT_DIR" \
+data_gen.kwargs.batch_size=1 \
+data_gen.kwargs.generation_batch_size=128
+```
+This will generate 1 million image-label pairs and save them to `YOUR_OUTPUT_DIR/images`. Note that `YOUR_OUTPUT_DIR` should be an _absolute path_, not a relative one, because Hydra changes the working directory. You may also want to tune the `generation_batch_size` to maximize GPU utilization on your machine.
+
+**Segmentation** 
+
+Once you have generated data, you can train a segmentation model:
+```bash
+PYTHONPATH=. python segmentation/main.py \
+name=NAME \
+data_gen=saved \
+data_gen.data.root="YOUR_OUTPUT_DIR_FROM_ABOVE"
+```
+
+**Segmentation with on-the-fly generation** 
+
+To generate data while training the segmentation model, you can run: 
+```bash
+PYTHONPATH=. python segmentation/main.py \
+name=NAME \
+data_gen=generated \
+data_gen/generator=bigbigan \
+data_gen.checkpoint="YOUR_OPTIMIZATION_DIR_FROM_ABOVE/latest.pth" \
+data_gen.kwargs.generation_batch_size=128
+```
+
 
 #### Evaluation
 To evaluate, set the `train` argument to False. For example:
@@ -133,10 +187,8 @@ python train.py \
 name="eval" \
 train=False \
 eval_checkpoint=${checkpoint} \
-data_seg.root=${DATASETS_DIR} \
-data_seg.image_size=${size}
+data_seg.root=${DATASETS_DIR} 
 ```
-
 
 #### Pretrained models
  * Name: [Download](url)

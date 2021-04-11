@@ -1,24 +1,18 @@
-"""
-Example usage:
->>> python optimize.py losses.outside_circle_loss=2.0 losses.sobel_shift_loss=10.0
->>> streamlit run optimize.py losses.outside_circle_loss=2.0 losses.sobel_shift_loss=10.0
-"""
-from pathlib import Path
 import time
+from pathlib import Path
+from PIL import Image
 import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
-from tqdm import trange, tqdm
-from PIL import Image
 import kornia as K
-from omegaconf import OmegaConf
+from tqdm import trange, tqdm
+import hydra
+from omegaconf import OmegaConf, DictConfig
 
-from models import MODELS
-import optimization_utils as utils
-from optimization_utils import rgb2gray
-from inversion.gans import make_gan
+from models.latent_shift_model import MODELS
+from optimization import utils
 
-import streamlit as st
+# from pytorch_pretrained_gans import make_gan
 
 
 class UnsupervisedSegmentationLoss(torch.nn.Module):
@@ -28,13 +22,6 @@ class UnsupervisedSegmentationLoss(torch.nn.Module):
         self.loss_weights = {n: w for n, w in loss_weights.items() if abs(w) > 1e-5}
         self.image_size = 128 if image_size is None else image_size
 
-        # Precompute outside masks to save computation
-        if 'outside_square_loss' in self.loss_weights:
-            border = {128: 20, 256: 38, 512: 75}[self.image_size]
-            square = torch.ones(1, 1, self.image_size, self.image_size)
-            square[:, :, border:-border, border:-border].zero_()
-            square = 2 * square - 1
-            self.register_buffer('outside_square', square)
         if 'outside_circle_loss' in self.loss_weights:
             x_axis = torch.linspace(-1, 1, self.image_size).unsqueeze(1)
             y_axis = torch.linspace(-1, 1, self.image_size).unsqueeze(0)
@@ -42,34 +29,14 @@ class UnsupervisedSegmentationLoss(torch.nn.Module):
             circle = (circle - circle.mean()) * 4  # magic number
             self.register_buffer('outside_circle', circle)
 
-    @staticmethod
-    def denormalize(img):
-        """Helper function to turn images from [-1,1] to [0,1]"""
-        return (img * 0.5) + 0.5
-
-    def lightness_loss(self, img, *cfg):
-        """Lightness variance loss"""
-        batch_size = img.shape[0]
-        img_gray = rgb2gray(img).reshape(batch_size, -1)  # RGB --> Grayscale
-        img_gray = img_gray - img_gray.mean(dim=1, keepdim=True)  # subtract mean
-        return - torch.mean(img_gray ** 2)  # encourage large values
-
-    def outside_square_loss(self, img, *cfg):
-        return torch.mean(rgb2gray(img) * self.outside_square)
-
-    def outside_circle_loss(self, img, *cfg):
-        return torch.mean(rgb2gray(img) * self.outside_circle)
+    def outside_circle_loss(self, img, img_shifted):
+        return torch.mean(utils.rgb2gray(img) * self.outside_circle)
 
     def sobel_shift_loss(self, img, img_shifted):
         """Edge pairwise loss"""
-        edge = K.sobel(rgb2gray(img).unsqueeze(0))  # extract edges
-        edge_shifted = K.sobel(rgb2gray(img_shifted).unsqueeze(0))  # extract edges
+        edge = K.sobel(utils.rgb2gray(img).unsqueeze(0))  # extract edges
+        edge_shifted = K.sobel(utils.rgb2gray(img_shifted).unsqueeze(0))  # extract edges
         return torch.mean((edge - edge_shifted) ** 2)  # encourage edges to be the same
-
-    def sobel_difference_loss(self, img, img_shifted):
-        edge = K.sobel(rgb2gray(img).unsqueeze(0))  # extract edges
-        edge_diff = K.sobel(rgb2gray(img - img_shifted).unsqueeze(0))
-        return torch.mean((edge - edge_diff) ** 2)  # encourage edges to be the same
 
     def forward(self, img, img_shifted):
         losses = {}
@@ -93,8 +60,7 @@ def forward_generate(*, G, z, r, d):
     return img_original, img_shifted
 
 
-def main(cfg):
-    print(OmegaConf.to_yaml(cfg))
+def run(cfg: DictConfig):
 
     # Device
     device = torch.device('cuda')
@@ -125,13 +91,7 @@ def main(cfg):
     criterion.to(device)
 
     # Logging, checkpointing, tensorboard
-    log_dir = Path(f'logs/{cfg.model_type}/{cfg.generator.gan_type.lower()}/{cfg.name}')
-    checkpoint_dir = log_dir / "checkpoints"
-    checkpoint_dir.mkdir(parents=True, exist_ok=True)
-    torch.save(cfg, log_dir / 'cfg.pth')
-    with open(log_dir / 'config.yaml', 'w') as f:
-        print(OmegaConf.to_yaml(cfg), file=f)
-    writer = SummaryWriter(log_dir=log_dir / 'tensorboard')
+    writer = SummaryWriter(log_dir='tensorboard')
 
     # Fixed vectors for visualization
     z_vis_fixed = G.sample_latent(batch_size=8, device=device).unsqueeze(1).requires_grad_(False)  # 8 vis images
@@ -180,24 +140,29 @@ def main(cfg):
         if i % cfg.log_every == 0:
             progress_bar.write(log_message)
 
-        # Visualize with Tensorboard, Streamlit and save to file
+        # Visualize with Tensorboard and save to file
         if i % cfg.vis_every == 0:
             img_grid = utils.create_grid(G=G, model=model, zs=z_vis_fixed, ys=y_vis_fixed, n_imgs=8)
             writer.add_image(f'vis', img_grid, global_step=i, dataformats='HWC')
-            st.image(img_grid, caption=i)
             img_file = log_dir / "imgs" / f"{i}.png"
             img_file.parent.mkdir(parents=True, exist_ok=True)
             img_grid = (img_grid * 255).astype(np.uint8)
             Image.fromarray(img_grid).save(str(img_file))
 
-    # Save checkpoint after iterations are complete
-    kwargs = dict(log_dir=log_dir, iteration=i, cfg=cfg)
-    utils.save_checkpoint(model, checkpoint_dir, name='latest.pth', **kwargs)
+            # # Uncomment these lines to visualize the data with Streamlit
+            # import streamlit as st
+            # st.image(img_grid, caption=i)
 
-    # Return final model
-    return model
+    # Save checkpoint after iterations are complete
+    utils.save_checkpoint(model=model, name='latest.pth', iteration=i, cfg=cfg)
+    print('Done')
+
+
+@hydra.main(config_path='../config', config_name='optimize')
+def main(cfg: DictConfig):
+    print(OmegaConf.to_yaml(cfg))
+    run(cfg)
 
 
 if __name__ == '__main__':
-    cfg = OmegaConf.merge(OmegaConf.load('config/optimize.yaml'), OmegaConf.from_cli())
-    main(cfg)
+    main()

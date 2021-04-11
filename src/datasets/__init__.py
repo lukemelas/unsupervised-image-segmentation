@@ -1,4 +1,3 @@
-from .saved_dataset import RawDataset, create_train_and_val_dataloaders
-from .biggan_dataset import GANDataset, DualGANDataset, create_gan_dataset
-from .seg_dataset import SegmentationDataset
-from .imagefolder import SimpleDataset, ZipDataset
+from .gan_dataset import create_gan_dataset
+from .saved_gan_dataset import create_train_and_val_dataloaders
+from .real_dataset import SegmentationDataset

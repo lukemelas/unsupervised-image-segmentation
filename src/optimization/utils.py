@@ -29,7 +29,7 @@ def create_grid(G, model, zs, ys, n_imgs=8, rs=[0, 2, 4, 8]):
     return img_grid
 
 
-def save_checkpoint(model, checkpoint_dir, name='latest.pth', **kwargs):
+def save_checkpoint(model, checkpoint_dir='.', name='latest.pth', **kwargs):
     checkpoint_dir.mkdir(exist_ok=True)
     torch.save(dict(
         state_dict=model.state_dict(),

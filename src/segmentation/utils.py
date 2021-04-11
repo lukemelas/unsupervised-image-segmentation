@@ -99,3 +99,7 @@ def collate_to_list(batch):
 def set_requires_grad(module, requires_grad=True):
     for p in module.parameters():
         p.requires_grad = requires_grad
+
+
+def get_dl_size(dl):
+    return f'ds/dl size: {len(dl.dataset)} / {len(dl)}'

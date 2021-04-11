@@ -1,14 +1,11 @@
 defaults:
-  - generator: bigbigan
+  - generator: null
 
 # Generate GAN-generated images on-the-fly during training 
 load_from_disk: False
 
-# Options for generation process
-gan_val_num_images: 256
-gan_val_file: "/tmp/gan-seg/gan-val-samples.pth"
-regenerate_gan_val_file: True
-save_gan_val_vis: True
+# Validation set size
+val_images: 256
 
 # Training options
 iters_per_epoch: 2000
@@ -32,5 +29,5 @@ kwargs:
 
 # Options generating dataset and saving to disk 
 save_dir: null
-save_size: null
+save_size: 1000000
 offset: 0

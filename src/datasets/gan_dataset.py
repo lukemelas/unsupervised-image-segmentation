@@ -10,10 +10,10 @@ from skimage.measure import label as measure_label
 from skimage.measure import perimeter as measure_perimeter
 from retry import retry
 from omegaconf import DictConfig
-from contexttimer import Timer
 
 from models import MODELS
-from inversion.gans import make_gan
+
+from pytorch_pretrained_gans import make_gan
 
 
 def to_cpu(x):
@@ -273,12 +273,8 @@ class GANDataset(GANDatasetBase):
     @retry(Exception, tries=25, delay=0.01)
     def _get_partial_batch(self, idx=None):
 
-        # with Timer() as t:
-
         # Generate samples
         img, img_shifted, y = list(map(to_cpu, self.gen_samples(batch_size=self.gen_batch_size, idx=idx)))
-
-        # print(f'After generation: {len(img)}')
 
         # Convert images to mask
         mask = convert_images_to_mask(img, img_shifted, method=self.mask_gen_method, invert=self.invert).cpu()
@@ -287,16 +283,12 @@ class GANDataset(GANDatasetBase):
         if self.filter_cc_threshold > 0.0:
             mask = apply_connected_components_filter(mask, threshold=self.filter_cc_threshold)
 
-        # print(f'After apply_connected_components_filter: {len(img)}')
-
         # Filter generated images by area
         if self.filter_size_thresholds:
             indices = get_area_filter_indices(mask, thresholds=self.filter_size_thresholds)
             if torch.all(~indices):
                 raise Exception('No images with masks of sufficient area')
             img, img_shifted, mask, y = img[indices], img_shifted[indices], mask[indices], y[indices]
-
-        # print(f'After get_area_filter_indices: {len(img)}')
 
         # Filter generated images by intensity histogram
         if self.filter_histogram_bins > 0:
@@ -305,16 +297,12 @@ class GANDataset(GANDatasetBase):
                 raise Exception('No images with histogram of sufficient intensity')
             img, img_shifted, mask, y = img[indices], img_shifted[indices], mask[indices], y[indices]
 
-        # print(f'After get_histogram_filter_indices: {len(img)}')
-
         # Filter generated images by roundness
         if self.filter_roundness_threshold:
             indices = get_roundness_filter_indices(mask, threshold=self.filter_roundness_threshold)
             if torch.all(~indices):
                 raise Exception('No images with sufficiently round masks')
             img, img_shifted, mask, y = img[indices], img_shifted[indices], mask[indices], y[indices]
-
-        # print(f'After get_roundness_filter_indices: {len(img)}')
 
         # Return generated images/masks/labels/etc
         partial_batch = [dict(zip(['img', 'img_shifted', 'mask'], item))
@@ -429,35 +417,32 @@ class DualGANDataset(GANDatasetBase):
             s.mask_dark = apply_connected_components_filter(s.mask_dark, threshold=self.filter_cc_threshold_dark)
         if self.filter_cc_threshold_light > 0.0:
             s.mask = apply_connected_components_filter(s.mask, threshold=self.filter_cc_threshold_light)
-        # print(f'after filter_cc_threshold_light: {s.img.shape[0]}')
+
         # Filter generated images by area
         if self.filter_size_thresholds_light or self.filter_size_thresholds_dark:
             indices_light = get_area_filter_indices(s.mask_light, thresholds=self.filter_size_thresholds_light)
             indices_dark = get_area_filter_indices(s.mask_dark, thresholds=self.filter_size_thresholds_dark)
             indices = indices_dark & indices_light
             select_indices(s, indices, error_msg='No images with masks of sufficient area')
-        # print(f'after filter_size_thresholds_light: {s.img.shape[0]}')
+
         # Filter generated images by intensity histogram
         if self.filter_histogram_bins_light > 0:
             indices_light = get_histogram_filter_indices(s.img_light, bins=self.filter_histogram_bins_light)
             indices_dark = get_histogram_filter_indices(s.img_dark, bins=self.filter_histogram_bins_dark)
             indices = indices_dark & indices_light
             select_indices(s, indices, error_msg='No images with histogram of sufficient intensity')
-        # print(f'after filter_histogram_bins_light: {s.img.shape[0]}')
+
         # Filter generated images by roundness
         if self.filter_roundness_threshold_light > 0:
             indices_light = get_roundness_filter_indices(s.mask_light, threshold=self.filter_roundness_threshold_light)
             indices_dark = get_roundness_filter_indices(s.mask_dark, threshold=self.filter_roundness_threshold_dark)
             indices = indices_dark & indices_light
             select_indices(s, indices, error_msg='No images with sufficiently round masks')
-        # print(f'after filter_roundness_threshold_light: {s.img.shape[0]}')
+
         # Filter generated images by roundness
         if self.filter_overlap_threshold > 0:
             indices = get_overlap_filter_indices(s.mask_light, s.mask_dark, threshold=self.filter_overlap_threshold)
             select_indices(s, indices, error_msg='No images with sufficient overlap')
-        # print(f'after filter_overlap_threshold: {s.img.shape[0]}')
-        # # Combine masks
-        # s.mask = s.mask_light & s.mask_dark
 
         # Return generated images/masks/labels/etc
         partial_batch = [dict(zip(s.__dict__.keys(), v)) for v in zip(*(s.__dict__.values()))]

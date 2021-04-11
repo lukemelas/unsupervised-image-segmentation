@@ -4,15 +4,14 @@ defaults:
 
 hydra:
   run:
-    dir: ./outputs/${name}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ./outputs/segmentation/${name}/${now:%Y-%m-%d_%H-%M-%S}
 
 name: "default"
 seed: 4321
+wandb: False
 
 train: True
 eval_checkpoint: null
-
-resume_model_only: null
 
 data_seg:
   binary_threshold: 0.5
@@ -42,20 +41,18 @@ data_seg:
 
 optimizer: 
   kind: 'Adam'
-  lr: 0.001  # maybe should be 1e-4 
-  lr_decay_gamma: 0.2
-  lr_decay_step_size: 8000
+  kwargs:
+    lr: 0.001
+  
+scheduler: 
+  kind: 'StepLR'
+  kwargs:
+    gamma: 0.2
+    step_size: 8000
 
 dataloader:
   batch_size: 128
   num_workers: 16
-
-logging:
-  log_freq: 100
-  log_dir: "logs"
-  version: null
-  loggers: 
-    - 'wandb'
 
 trainer:
   # See https://pytorch-lightning.readthedocs.io/en/stable/trainer.html#trainer-flags

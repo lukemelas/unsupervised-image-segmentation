@@ -2,7 +2,7 @@
 """ Full assembly of the parts to form the complete network """
 
 from torch import nn
-from UNet.unet_parts import DoubleConv, Down, Up, OutConv
+from .unet_parts import DoubleConv, Down, Up, OutConv
 
 
 class UNet(nn.Module):
