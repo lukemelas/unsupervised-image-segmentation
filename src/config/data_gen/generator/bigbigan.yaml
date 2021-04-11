@@ -1,3 +1,0 @@
-gan_type: BigBiGAN
-image_size: 128
-kwargs: {}

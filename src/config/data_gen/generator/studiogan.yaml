@@ -1,5 +1,0 @@
-gan_type: StudioGAN
-image_size: 128
-kwargs: 
-  model_name: SAGAN
-  dataset: ImageNet
