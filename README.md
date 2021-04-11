@@ -24,14 +24,13 @@ The pretrained weights for most GANs are downloaded automatically. For those tha
 
 There are also some standard dependencies:
  - PyTorch (tested on version 1.7.1, but should work on any version)
- - Hydra 1.1
- - Albumentations, Retry
- - [Optional] Weights and Biases 
+ - [Hydra](https://github.com/facebookresearch/hydra) 1.1
+ - [Albumentations](https://github.com/albumentations-team/albumentations), [Kornia](https://github.com/kornia/kornia), [Retry](https://github.com/invl/retry)
+ - [Optional] [Weights and Biases](https://wandb.ai/)
  
  Install them with:
  ```bash
-pip install hydra-core --pre
-pip install albumentations tqdm retry tensorboard
+pip install hydra-core==1.1.0dev5 albumentations tqdm retry kornia
  ```
  
 
@@ -151,7 +150,7 @@ _Note:_ All commands are called from within the `src` directory.
 
 In the example commands below, we use BigBiGAN. You can easily switch out BigBiGAN for another model if you would like to. 
 
-**Optimizaion**
+**Optimization**
 ```bash
 PYTHONPATH=. python optimization/main.py data_gen/generator=bigbigan name=NAME
 ```

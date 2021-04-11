@@ -11,7 +11,7 @@ from omegaconf import OmegaConf, DictConfig
 from models.latent_shift_model import MODELS
 from optimization import utils
 
-# from pytorch_pretrained_gans import make_gan
+from pytorch_pretrained_gans import make_gan
 
 
 class UnsupervisedSegmentationLoss(torch.nn.Module):
@@ -65,7 +65,7 @@ def run(cfg: DictConfig):
     device = torch.device('cuda')
 
     # Load GAN
-    G = make_gan(gan_type=cfg.generator.gan_type, **cfg.generator.kwargs)
+    G = make_gan(gan_type=cfg.data_gen.generator.gan_type, **cfg.data_gen.generator.kwargs)
     G.eval().to(device)
     utils.set_requires_grad(G, False)
 
@@ -86,7 +86,7 @@ def run(cfg: DictConfig):
     scheduler = Scheduler(optimizer, **cfg.scheduler.kwargs)
 
     # Loss function
-    criterion = UnsupervisedSegmentationLoss(cfg.losses, image_size=cfg.generator.image_size)
+    criterion = UnsupervisedSegmentationLoss(cfg.losses, image_size=cfg.data_gen.generator.image_size)
     criterion.to(device)
 
     # Fixed vectors for visualization
@@ -138,8 +138,7 @@ def run(cfg: DictConfig):
         # Visualize with Tensorboard and save to file
         if i % cfg.vis_every == 0:
             img_grid = utils.create_grid(G=G, model=model, zs=z_vis_fixed, ys=y_vis_fixed, n_imgs=8)
-            img_file = "images" / f"{i}.png"
-            img_file.parent.mkdir(parents=True, exist_ok=True)
+            img_file = f"visualization-{i:05d}.png"
             img_grid = (img_grid * 255).astype(np.uint8)
             Image.fromarray(img_grid).save(str(img_file))
 
