@@ -57,7 +57,7 @@ dataloader:
 trainer:
   # See https://pytorch-lightning.readthedocs.io/en/stable/trainer.html#trainer-flags
   gpus: 1
-  max_steps: 12000
+  max_steps: 18000
   accelerator: null  # "ddp_spawn"
   num_sanity_val_steps: 5 
   fast_dev_run: False

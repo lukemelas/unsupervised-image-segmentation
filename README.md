@@ -24,13 +24,16 @@ The pretrained weights for most GANs are downloaded automatically. For those tha
 
 There are also some standard dependencies:
  - PyTorch (tested on version 1.7.1, but should work on any version)
+ - [PyTorch Lightning](https://github.com/PyTorchLightning/pytorch-lightning)
  - [Hydra](https://github.com/facebookresearch/hydra) 1.1
- - [Albumentations](https://github.com/albumentations-team/albumentations), [Kornia](https://github.com/kornia/kornia), [Retry](https://github.com/invl/retry)
+ - [Albumentations](https://github.com/albumentations-team/albumentations)
+ - [Kornia](https://github.com/kornia/kornia)
+ - [Retry](https://github.com/invl/retry)
  - [Optional] [Weights and Biases](https://wandb.ai/)
  
  Install them with:
  ```bash
-pip install hydra-core==1.1.0dev5 albumentations tqdm retry kornia
+pip install hydra-core==1.1.0dev5 pytorch_lightning albumentations tqdm retry kornia
  ```
  
 
@@ -154,7 +157,7 @@ In the example commands below, we use BigBiGAN. You can easily switch out BigBiG
 ```bash
 PYTHONPATH=. python optimization/main.py data_gen/generator=bigbigan name=NAME
 ```
-The output will be saved in `outputs/optimization/fixed-BigBiGAN-NAME/DATE/`, with the final checkpoint in `latest.pth`.
+This should take less than 5 minutes to run. The output will be saved in `outputs/optimization/fixed-BigBiGAN-NAME/DATE/`, with the final checkpoint in `latest.pth`.
 
 **Segmentation with precomputed generations**
 
@@ -170,7 +173,7 @@ data_gen.save_size=1000000 \
 data_gen.kwargs.batch_size=1 \
 data_gen.kwargs.generation_batch_size=128
 ```
-This will generate 1 million image-label pairs and save them to `YOUR_OUTPUT_DIR/images`. Note that `YOUR_OUTPUT_DIR` should be an _absolute path_, not a relative one, because Hydra changes the working directory. You may also want to tune the `generation_batch_size` to maximize GPU utilization on your machine.
+This will generate 1 million image-label pairs and save them to `YOUR_OUTPUT_DIR/images`. Note that `YOUR_OUTPUT_DIR` should be an _absolute path_, not a relative one, because Hydra changes the working directory. You may also want to tune the `generation_batch_size` to maximize GPU utilization on your machine. It takes around 3-4 hours to generate 1 million images on a single V100 GPU.
 
 Once you have generated data, you can train a segmentation model:
 ```bash
@@ -179,6 +182,7 @@ name=NAME \
 data_gen=saved \
 data_gen.data.root="YOUR_OUTPUT_DIR_FROM_ABOVE"
 ```
+It takes around 3 hours on 1 GPU to complete 18000 iterations, by which point the model has converged (in fact you can probably get away with fewer steps, I would guess around ~5000). 
 
 **Segmentation with on-the-fly generations** 
 

@@ -46,7 +46,7 @@ def run(cfg: DictConfig):
             for output_dict in output_batch:
                 img = tensor_to_image(output_dict['img'])
                 mask = tensor_to_mask(output_dict['mask'])
-                y = int(output_dict['y'])
+                y = int(output_dict['y']) if 'y' in output_dict else 0
                 stem = f'{i:08d}-seed_{cfg.seed}-class_{y:03d}'
                 img.save(save_dir / f'{stem}.jpg')
                 mask.save(save_dir / f'{stem}.png')

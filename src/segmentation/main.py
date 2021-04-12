@@ -8,8 +8,8 @@ from omegaconf import OmegaConf, DictConfig
 import logging
 import hydra
 
-from . import utils
-from . import metrics
+from segmentation import utils
+from segmentation import metrics
 from models import UNet
 from datasets import SegmentationDataset, create_gan_dataset, create_train_and_val_dataloaders
 
@@ -189,7 +189,7 @@ def main(cfg: DictConfig):
         ]
 
         # Logging
-        logger = pl.loggers.WandbLogger(name=cfg.name) if cfg.wanbd else True
+        logger = pl.loggers.WandbLogger(name=cfg.name) if cfg.wandb else True
 
         # Trainer
         trainer = pl.Trainer(logger=logger, callbacks=callbacks, **cfg.trainer)
