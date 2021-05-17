@@ -209,7 +209,7 @@ data_seg.root=${DATASETS_DIR}
 
 
 #### Pretrained models
- * Name: [Download](url)
+ * ... are coming soon!
 
 
 #### Available GANs
