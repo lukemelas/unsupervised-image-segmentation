@@ -19,7 +19,8 @@ const Index = () => (
     {/* Links */}
     <LinksRow />
 
-    {/* Video */}
+    {/* Video (disabled for now) */}
+    { /* 
     <Container w="90vw" h="50.6vw" maxW="700px" maxH="393px" mb="3rem">
       <iframe
         width="100%" height="100%"
@@ -28,6 +29,7 @@ const Index = () => (
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen>
       </iframe>
     </Container>
+    */ }
 
     {/* Main */}
     <Container w="100%" maxW="44rem" alignItems="left" pl="1rem" pr="1rem">
