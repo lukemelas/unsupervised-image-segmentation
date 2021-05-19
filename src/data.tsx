@@ -38,12 +38,12 @@ export const authors = [
 
 // Links
 export const links = {
-  'paper': "#", // "https://arxiv.org/abs/2002.00733",
+  'paper': "https://arxiv.org/abs/2105.08127",
   'github': "https://github.com/lukemelas/unsupervised-image-segmentation"
 }
 
 // Acknowledgements
-export const acknowledgements = "We thank xyz for abc..."
+export const acknowledgements = "C. R. is supported by Innovate UK (project 71653) on behalf of UK Research and Innovation (UKRI) and by the European Research Council (ERC) IDIU-638009. I. L. is supported by the EPSRC programme grant Seebibyte EP/M013774/1 and ERC starting grant IDIU-638009. A. V. is funded by ERC grant IDIU-638009."
 
 // Citation
 export const citationId = "melaskyriazi2021finding"
