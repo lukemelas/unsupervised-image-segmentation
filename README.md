@@ -2,7 +2,7 @@
  
 ## Finding an Unsupervised Image Segmenter in each of your Deep Generative Models
 
-[![Paper](http://img.shields.io/badge/paper-arxiv.1001.2234-B31B1B.svg)](https://www.nature.com/articles/nature14539)
+[![Paper](http://img.shields.io/badge/paper-arxiv.2105.08127-B31B1B.svg)](https://arxiv.org/abs/2105.08127)
 <!-- [![Conference](http://img.shields.io/badge/CVPR-2021-4b44ce.svg)](https://papers.nips.cc/book/advances-in-neural-information-processing-systems-31-2018) -->
 
 </div>
